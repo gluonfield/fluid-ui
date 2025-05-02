@@ -89,8 +89,8 @@ export function DynamicWorkspace({
           isBounded
         >
           {components.map((component) => (
-            <div key={component.id} className="bg-gray-800 rounded-lg overflow-hidden">
-              <div className="component-drag-handle bg-gray-700 p-2 cursor-move flex justify-between items-center">
+            <div key={component.id} className="group bg-gray-800 rounded-lg overflow-hidden">
+              <div className="component-drag-handle bg-gray-700 p-2 cursor-move flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <div className="w-6 h-1 bg-gray-500 rounded" />
                 {onRemoveComponent && (
                   <button
