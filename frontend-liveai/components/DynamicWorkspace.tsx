@@ -51,16 +51,45 @@ export function DynamicWorkspace({
       y: comp.y,
       w: comp.w,
       h: comp.h,
+      minW: 2, // Minimum width of 2 units
+      maxW: 12, // Maximum width of full grid
+      minH: 2, // Minimum height of 2 units (60px)
     }))
   );
 
+  useEffect(() => {
+    // Update layout when components change
+    setLayout(
+      components.map((comp) => ({
+        i: comp.id,
+        x: comp.x,
+        y: comp.y,
+        w: comp.w,
+        h: comp.h,
+        minW: 2,
+        maxW: 12,
+        minH: 2,
+      }))
+    );
+  }, [components]);
+
   const handleLayoutChange = (newLayout: Layout[]) => {
-    setLayout(newLayout);
-    onLayoutChange?.(newLayout);
+    // Preserve width and height from components when updating layout
+    const updatedLayout = newLayout.map((item) => {
+      const component = components.find((c) => c.id === item.i);
+      return {
+        ...item,
+        w: component?.w || item.w,
+        h: component?.h || item.h,
+      };
+    });
+
+    setLayout(updatedLayout);
+    onLayoutChange?.(updatedLayout);
 
     // Notify about position changes
     if (onUpdatePosition) {
-      newLayout.forEach((item) => {
+      updatedLayout.forEach((item) => {
         const oldLayout = layout.find((l) => l.i === item.i);
         if (oldLayout && (oldLayout.x !== item.x || oldLayout.y !== item.y)) {
           onUpdatePosition(item.i, { x: item.x, y: item.y });
@@ -81,6 +110,9 @@ export function DynamicWorkspace({
           onLayoutChange={handleLayoutChange}
           draggableHandle=".component-drag-handle"
           margin={[16, 16]}
+          compactType="vertical"
+          preventCollision={false}
+          isBounded
         >
           {components.map((component) => (
             <div key={component.id} className="bg-gray-800 rounded-lg overflow-hidden">

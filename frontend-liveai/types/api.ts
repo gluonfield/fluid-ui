@@ -1,13 +1,14 @@
 export interface ApiComponent {
   id: string;
-  content: string;
+  comp: string;
+  data: Record<string, string>;
   x: number;
   y: number;
   w: number;
   h: number;
 }
 
-export type PositionUpdate = {
+export interface PositionUpdate {
   x: number;
   y: number;
-} & Record<string, unknown>; 
+} 
