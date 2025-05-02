@@ -17,12 +17,14 @@ interface DynamicWorkspaceProps {
   components: DynamicComponent[];
   onLayoutChange?: (layout: Layout[]) => void;
   onRemoveComponent?: (id: string) => void;
+  onUpdatePosition?: (id: string, position: { x: number; y: number }) => void;
 }
 
 export function DynamicWorkspace({
   components,
   onLayoutChange,
   onRemoveComponent,
+  onUpdatePosition,
 }: DynamicWorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -55,6 +57,16 @@ export function DynamicWorkspace({
   const handleLayoutChange = (newLayout: Layout[]) => {
     setLayout(newLayout);
     onLayoutChange?.(newLayout);
+
+    // Notify about position changes
+    if (onUpdatePosition) {
+      newLayout.forEach((item) => {
+        const oldLayout = layout.find((l) => l.i === item.i);
+        if (oldLayout && (oldLayout.x !== item.x || oldLayout.y !== item.y)) {
+          onUpdatePosition(item.i, { x: item.x, y: item.y });
+        }
+      });
+    }
   };
 
   return (
