@@ -1,12 +1,13 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GridLayout, { Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { CloseIcon } from "./CloseIcon";
+import DynamicComponent from "./DynamicComponent";
 
 export interface DynamicComponent {
   id: string;
-  content: ReactNode;
+  component: string;
   x: number;
   y: number;
   w: number;
@@ -17,14 +18,12 @@ interface DynamicWorkspaceProps {
   components: DynamicComponent[];
   onLayoutChange?: (layout: Layout[]) => void;
   onRemoveComponent?: (id: string) => void;
-  onUpdatePosition?: (id: string, position: { x: number; y: number }) => void;
 }
 
 export function DynamicWorkspace({
   components,
   onLayoutChange,
   onRemoveComponent,
-  onUpdatePosition,
 }: DynamicWorkspaceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -51,51 +50,71 @@ export function DynamicWorkspace({
       y: comp.y,
       w: comp.w,
       h: comp.h,
-      minW: 2, // Minimum width of 2 units
-      maxW: 12, // Maximum width of full grid
-      minH: 2, // Minimum height of 2 units (60px)
+      minW: 2,
+      maxW: 12,
+      minH: 2,
     }))
   );
 
   useEffect(() => {
     // Update layout when components change
-    setLayout(
-      components.map((comp) => ({
-        i: comp.id,
-        x: comp.x,
-        y: comp.y,
-        w: comp.w,
-        h: comp.h,
-        minW: 2,
-        maxW: 12,
-        minH: 2,
-      }))
-    );
+    const newLayout = components.map((comp) => ({
+      i: comp.id,
+      x: comp.x,
+      y: comp.y,
+      w: comp.w,
+      h: comp.h,
+      minW: 2,
+      maxW: 12,
+      minH: 2,
+    }));
+    setLayout(newLayout);
   }, [components]);
 
   const handleLayoutChange = (newLayout: Layout[]) => {
-    // Preserve width and height from components when updating layout
-    const updatedLayout = newLayout.map((item) => {
-      const component = components.find((c) => c.id === item.i);
-      return {
-        ...item,
-        w: component?.w || item.w,
-        h: component?.h || item.h,
-      };
+    // Only update if there's an actual change
+    const hasChanges = newLayout.some((item, index) => {
+      const oldItem = layout[index];
+      return (
+        !oldItem ||
+        oldItem.x !== item.x ||
+        oldItem.y !== item.y ||
+        oldItem.w !== item.w ||
+        oldItem.h !== item.h
+      );
     });
 
-    setLayout(updatedLayout);
-    onLayoutChange?.(updatedLayout);
+    if (!hasChanges) return;
 
-    // Notify about position changes
-    if (onUpdatePosition) {
-      updatedLayout.forEach((item) => {
-        const oldLayout = layout.find((l) => l.i === item.i);
-        if (oldLayout && (oldLayout.x !== item.x || oldLayout.y !== item.y)) {
-          onUpdatePosition(item.i, { x: item.x, y: item.y });
-        }
-      });
-    }
+    setLayout(newLayout);
+    onLayoutChange?.(newLayout);
+
+    // Update server with new positions
+    newLayout.forEach((item) => {
+      const oldLayout = layout.find((l) => l.i === item.i);
+      if (
+        oldLayout &&
+        (oldLayout.x !== item.x ||
+          oldLayout.y !== item.y ||
+          oldLayout.w !== item.w ||
+          oldLayout.h !== item.h)
+      ) {
+        fetch(`/api/backend/ui/components/position/${item.i}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            x: Number(item.x),
+            y: Number(item.y),
+            w: Number(item.w),
+            h: Number(item.h),
+          }),
+        }).catch((error) => {
+          console.error("Failed to update component position:", error);
+        });
+      }
+    });
   };
 
   return (
@@ -106,13 +125,16 @@ export function DynamicWorkspace({
           layout={layout}
           cols={12}
           rowHeight={30}
-          width={containerWidth - 32} // Subtract padding
+          width={containerWidth - 32}
           onLayoutChange={handleLayoutChange}
           draggableHandle=".component-drag-handle"
           margin={[16, 16]}
-          compactType="vertical"
+          compactType={null}
           preventCollision={false}
           isBounded
+          useCSSTransforms={true}
+          isResizable={true}
+          isDraggable={true}
         >
           {components.map((component) => (
             <div key={component.id} className="bg-gray-800 rounded-lg overflow-hidden">
@@ -127,7 +149,7 @@ export function DynamicWorkspace({
                   </button>
                 )}
               </div>
-              <div className="p-4">{component.content}</div>
+              <DynamicComponent componentString={component.component} />
             </div>
           ))}
         </GridLayout>

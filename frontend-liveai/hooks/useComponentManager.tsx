@@ -1,53 +1,48 @@
 import * as React from "react";
-import { componentRegistry } from "../components/ComponentRegistry";
-import { DynamicComponent } from "../components/DynamicWorkspace";
-import { ApiComponent, PositionUpdate } from "../types/api";
+import DynamicComponent from "../components/DynamicComponent";
+
+interface Component {
+  id: string;
+  component: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+interface PositionUpdate {
+  x: number;
+  y: number;
+}
 
 export function useComponentManager() {
-  const [components, setComponents] = React.useState<DynamicComponent[]>([]);
+  const [components, setComponents] = React.useState<Component[]>([]);
 
   // Fetch initial components
+  const fetchComponents = async () => {
+    try {
+      const response = await fetch("/api/backend/ui/components");
+      const data = await response.json();
+      setComponents(data);
+    } catch (error) {
+      console.error("Failed to fetch components:", error);
+    }
+  };
+
+  // interval to fetch components
   React.useEffect(() => {
-    const fetchComponents = async () => {
-      try {
-        const apiComponents = await fetch("/api/backend/ui/components");
-        const data = await apiComponents.json();
-
-        // Transform API components to DynamicComponents
-        const dynamicComponents = data
-          .map((component: ApiComponent) => {
-            const Component = componentRegistry[component.comp];
-            if (!Component) {
-              console.error(`Unknown component type: ${component.comp}`);
-              return null;
-            }
-
-            return {
-              id: component.id,
-              // @ts-expect-error - TODO: fix this
-              content: <Component {...component.data} />,
-              x: component.x,
-              y: component.y,
-              w: component.w,
-              h: component.h,
-            };
-          })
-          .filter(Boolean);
-
-        setComponents(dynamicComponents);
-      } catch (error) {
-        console.error("Failed to fetch components:", error);
-      }
-    };
-
+    const interval = setInterval(() => {
+      fetchComponents();
+    }, 1000);
     fetchComponents();
+    return () => clearInterval(interval);
   }, []);
 
   const addComponent = React.useCallback(
-    (content: React.ReactNode) => {
-      const newComponent: DynamicComponent = {
-        id: `component-${Date.now()}`,
-        content,
+    (component: string) => {
+      const newComponent: Component = {
+        id: `component-${components.length}`,
+        component,
         x: (components.length * 4) % 12,
         y: Math.floor(components.length / 3) * 4,
         w: 4,
@@ -72,6 +67,9 @@ export function useComponentManager() {
     try {
       await fetch(`/api/backend/ui/components/position/${id}`, {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(position),
       });
 
@@ -83,10 +81,36 @@ export function useComponentManager() {
     }
   }, []);
 
+  const renderComponent = React.useCallback(
+    (component: Component) => {
+      return (
+        <div
+          key={component.id}
+          style={{
+            position: "absolute",
+            left: `${component.x * 8.33}%`, // Convert grid units to percentage (12-column grid)
+            top: `${component.y * 50}px`, // Assuming each grid unit is 50px height
+            width: `${component.w * 8.33}%`,
+            height: `${component.h * 50}px`,
+          }}
+        >
+          <DynamicComponent
+            componentString={component.component}
+            props={{
+              onPositionChange: (x: number, y: number) => updatePosition(component.id, { x, y }),
+            }}
+          />
+        </div>
+      );
+    },
+    [updatePosition]
+  );
+
   return {
     components,
     addComponent,
     removeComponent,
     updatePosition,
+    renderComponent,
   };
 }

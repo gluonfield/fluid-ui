@@ -19,6 +19,8 @@ class UIComponent(BaseModel):
 class PositionUpdate(BaseModel):
     x: float
     y: float
+    w: float
+    h: float
 
 @app.get("/ui/components/{component_id}")
 async def get_ui(component_id: str):
@@ -39,8 +41,8 @@ def update_position(component_id: str, pos: PositionUpdate):
     component = component_mem.get_component_by_id(component_id)
     if not component:
         raise HTTPException(status_code=404, detail="Component not found")
-    component_mem.change_position(component_id, pos.x, pos.y)
-    return {"message": "Position updated", "component": component}
+    component_mem.change_position(component_id, pos.x, pos.y, pos.w, pos.h)
+    return {"message": "Position and dimensions updated", "component": component}
 
 
 if __name__ == "__main__":

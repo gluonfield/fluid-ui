@@ -4,7 +4,6 @@ import { CloseIcon } from "@/components/CloseIcon";
 import { DynamicWorkspace } from "@/components/DynamicWorkspace";
 import { NoAgentNotification } from "@/components/NoAgentNotification";
 import TranscriptionView from "@/components/TranscriptionView";
-import { useAssistantResponseHandler } from "@/hooks/useAssistantResponseHandler";
 import { useComponentManager } from "@/hooks/useComponentManager";
 import {
   BarVisualizer,
@@ -22,18 +21,9 @@ import type { ConnectionDetails } from "./api/connection-details/route";
 
 export default function Page() {
   const [room] = useState(new Room());
-  const { components, addComponent, removeComponent, updatePosition } = useComponentManager();
+  const { components, addComponent, removeComponent } = useComponentManager();
 
   const onConnectButtonClicked = useCallback(async () => {
-    // Generate room connection details, including:
-    //   - A random Room name
-    //   - A random Participant name
-    //   - An Access Token to permit the participant to join the room
-    //   - The URL of the LiveKit server to connect to
-    //
-    // In real-world application, you would likely allow the user to specify their
-    // own participant name, and possibly to choose from existing rooms to join.
-
     const url = new URL(
       process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? "/api/connection-details",
       window.location.origin
@@ -46,10 +36,10 @@ export default function Page() {
 
     // Add a test component when connected
     addComponent(
-      <div className="text-white">
+      `<div className="text-white">
         <h3 className="text-lg font-bold mb-2">Test Component</h3>
         <p>This is a test component that appears when you connect.</p>
-      </div>
+      </div>`
     );
   }, [room, addComponent]);
 
@@ -72,7 +62,7 @@ export default function Page() {
             <DynamicWorkspace
               components={components}
               onRemoveComponent={removeComponent}
-              onUpdatePosition={updatePosition}
+              // onLayoutChange={handleLayoutChange}
             />
           </div>
         </div>
@@ -83,9 +73,6 @@ export default function Page() {
 
 function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
   const { state: agentState } = useVoiceAssistant();
-  const { addComponent } = useComponentManager();
-
-  useAssistantResponseHandler({ onNewComponent: addComponent });
 
   return (
     <>
