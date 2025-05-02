@@ -1,5 +1,5 @@
 from typing import Dict
-from backend.utils.dummy_components import components
+from utils.dummy_components import components
 
 class ComponentMemory:
     def __init__(self):
