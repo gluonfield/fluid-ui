@@ -58,7 +58,7 @@ export function DynamicWorkspace({
   };
 
   return (
-    <div ref={containerRef} className="h-full bg-gray-900 rounded-lg p-4">
+    <div ref={containerRef} className="h-full bg-black rounded-lg p-4">
       {containerWidth > 0 && (
         <GridLayout
           className="layout"
