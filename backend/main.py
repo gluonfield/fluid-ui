@@ -14,7 +14,7 @@ from livekit.agents import (
 )
 from livekit.plugins import openai, noise_cancellation
 from openai import OpenAI
-from agent.tools import tools, ComponentResponse
+from agent.tools import tools, ComponentResponse, data_tools
 import logging
 
 logging.basicConfig(
@@ -80,6 +80,27 @@ class Assistant(Agent):
 
         args_json = msg.tool_calls[0].function.arguments
         data: ComponentResponse = json.loads(args_json)
+        
+        # data_completion = client.chat.completions.create(
+        #     model="gpt-4o",
+        #     temperature=0.3,
+        #     max_tokens=1_024,
+        #     tool_choice={"type": "function", "function": {"name": "create_component"}},
+        #     tools=data_tools,
+        #     messages=[
+        #         {
+        #             "role": "system",
+        #             "content": (
+        #                 f"Call the appropriate tool to obtain data and return it in the form compatible with the schema below: {data.input_schema}."
+        #             ),
+        #         },
+        #         {"role": "user", "content": instruction},
+        #     ],
+        # )
+        
+        # data_args_json = data_completion.choices[0].message.tool_calls[0]
+        # print("Data returned: ", data_args_json)
+                
         logger.debug(f"data: {data}")
         return {"status": "success"}
 

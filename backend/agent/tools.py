@@ -2,7 +2,7 @@ from typing import TypedDict
 
 class ComponentResponse(TypedDict):
     code: str  
-    input: str
+    input_schema: str
 
 tools = [
     {
@@ -31,5 +31,31 @@ tools = [
                 "required": ["code", "input"],
             },
         },
-    }
+    },
 ]
+
+
+data_tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_twitter_data",
+            "description": (
+                "Return the latest tweets."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "json": {
+                        "type": "string",
+                        "description": (
+                            "The json data for the tweets."
+                        ),
+                    },
+                },
+                "required": ["json"],
+            },
+        },
+    },
+]
+
