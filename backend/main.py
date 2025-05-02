@@ -16,6 +16,7 @@ from livekit.plugins import openai, noise_cancellation
 from openai import OpenAI
 from myagent.tools import tools, ComponentResponse, data_tools
 import logging
+import asyncio
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -73,50 +74,7 @@ class Assistant(Agent):
         Returns:
             dict with keys `code` and `input`.
         """
-        logger.info(f"Generating component for: {instruction}")
-        logger.debug(f"RunContext: {context}")
-
-        logger.info("Generating component...")
-        completion = client.chat.completions.create(
-            model="gpt-4o",
-            temperature=0.3,
-            max_tokens=1_024,
-            tool_choice={"type": "function", "function": {"name": "create_component"}},
-            tools=tools,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a senior front-end engineer. "
-                        "For the user's request, call `create_component` exactly once. You must create a valid React component that can be embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component. You shouldssume all existing shadcn imports and tailwind available."
-                    ),
-                },
-                {"role": "user", "content": instruction},
-            ],
-        )
-        logger.info("Component generated")
-        msg = completion.choices[0].message
-        if not msg.tool_calls:
-            raise RuntimeError("Model did not return a tool call!")
-
-        args_json = msg.tool_calls[0].function.arguments
-        data: ComponentResponse = json.loads(args_json)
-        print("COMPLETIONS DATA", data)
-        
-        oai_agent = oai_agents.Agent(
-        name="Component Helper",
-        instructions="Your job is to obtain the data in the format of json from the twitter api. Return your data response in the format of json.",
-            tools=[get_twitter_data],
-        )
-        
-        agent_instruction = f"Generate data in the following format: {data['input_schema']}. This data is used in a widget component originating from the following instruction: {instruction}. You must not start with ``` or any other text. Return RAW json."
-        oai_result = await oai_agents.Runner.run(
-                oai_agent,
-                input=agent_instruction
-        )
-        print("OPENAI DATA", oai_result.final_output)  
-        logger.debug(f"data: {data}")
-        return {"status": "success"}
+        return await execute(instruction, context)
 
     def __init__(self) -> None:
         super().__init__(
@@ -151,6 +109,55 @@ async def entrypoint(ctx: agents.JobContext):
         )
     )
 
+async def execute(instruction: str, context: RunContext):
+    instruction = "Generate a twitter widget component"
+    print("INSTRUCTION", instruction)
+    logger.info(f"Generating component for: {instruction}")
+    logger.debug(f"RunContext: {context}")
+
+    logger.info("Generating component...")
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        temperature=0.3,
+        max_tokens=1_024,
+        tool_choice={"type": "function", "function": {"name": "create_component"}},
+        tools=tools,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a senior front-end engineer. "
+                    "For the user's request, call `create_component` exactly once. You must create a valid React component that can be embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component. You shouldssume all existing shadcn imports and tailwind available. For example twitter component should return a list of data such as handle, message and time. And instagram or tiktok component should return a list of data such as image, caption and username."
+                ),
+            },
+            {"role": "user", "content": instruction},
+        ],
+    )
+    logger.info("Component generated")
+    msg = completion.choices[0].message
+    if not msg.tool_calls:
+        raise RuntimeError("Model did not return a tool call!")
+
+    args_json = msg.tool_calls[0].function.arguments
+    data: ComponentResponse = json.loads(args_json)
+    print("COMPLETIONS DATA", data)
+    
+    agent_instruction = f"Retrieve the data using appropriate tools and return it in the following format: {data['input_schema']}. The input data is used for the following React component {data['code']}. This data is used in a widget component originating from the following instruction: {instruction}. You must not start with ``` or any other text. Return RAW json."
+    
+    oai_agent = oai_agents.Agent(
+        name="Data retriever and formatter agent",
+        instructions=agent_instruction,
+        tools=[get_twitter_data],
+    )
+
+    oai_result = await oai_agents.Runner.run(
+        oai_agent,
+        input=agent_instruction
+    )
+    print("OPENAI DATA", oai_result.final_output)  
+    logger.debug(f"data: {data}")
+    return {"status": "success"}
 
 if __name__ == "__main__":
-    agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
+    asyncio.run(execute("Generate a twitter widget component", None))
+    # agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
