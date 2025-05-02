@@ -152,7 +152,7 @@ export function DynamicWorkspace({
               </div>
               <DynamicComponent
                 componentString={component.comp}
-                data={JSON.parse(component.data)}
+                data={JSON.parse(component.data || "{}")}
               />
             </div>
           ))}

@@ -98,7 +98,7 @@ export function useComponentManager() {
         >
           <DynamicComponent
             componentString={component.comp}
-            data={JSON.parse(component.data)}
+            data={JSON.parse(component.data || "{}")}
             props={{
               onPositionChange: (x: number, y: number) => updatePosition(component.id, { x, y }),
             }}
