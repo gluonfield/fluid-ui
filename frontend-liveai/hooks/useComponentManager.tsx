@@ -24,6 +24,7 @@ export function useComponentManager() {
 
             return {
               id: component.id,
+              // @ts-expect-error - TODO: fix this
               content: <Component {...component.data} />,
               x: component.x,
               y: component.y,
