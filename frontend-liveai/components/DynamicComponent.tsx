@@ -121,7 +121,13 @@ const DynamicComponent: React.FC<DynamicComponentProps> = ({
       /** @jsx React.createElement */
       function createComponent(React, getComponent, htmlElements, props, cn) {
         const data = ${JSON.stringify(parsedData)};
-        const news = data.news;  // Extract news from data
+        // Make all data properties available in scope
+        const dataProps = Object.entries(data).reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {});
+        // Spread data properties into the current scope
+        Object.assign(this, dataProps);
         
         // Create a non-recursive createElement wrapper
         const customCreateElement = (type, props, ...children) => {
