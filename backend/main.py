@@ -67,7 +67,7 @@ class Assistant(Agent):
                     "role": "system",
                     "content": (
                         "You are a senior front-end engineer. "
-                        "For the user's request, call `create_component` exactly once."
+                        "For the user's request, call `create_component` exactly once. You must create a valid React component that can be embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component. You shouldssume all existing shadcn imports and tailwind available."
                     ),
                 },
                 {"role": "user", "content": instruction},

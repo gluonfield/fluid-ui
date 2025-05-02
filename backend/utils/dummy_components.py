@@ -1,12 +1,12 @@
 components = [
     {
         "id": "header1",
-        "comp": "Header",
-        "data": {"text": "Welcome to the Dashboard"},
+        "comp": '<Button className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Hi!</Button>',
+        "data": {},
         "x": 0.0,
         "y": 0.0,
-        "w": 12.0,
-        "h": 1.0
+        "w": 5.0,
+        "h": 5.0
     },
     {
         "id": "chart1",
