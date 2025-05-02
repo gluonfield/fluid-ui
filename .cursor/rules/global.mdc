@@ -5,3 +5,29 @@ alwaysApply: true
 ---
 - Frontend code is located at `frontend-liveai`
 - Backend code is located at `backend`
+
+# Product
+UX
+1. Enter voice chat
+2. Give it a prompt 
+    1. What’s the weather in London?
+3. Wait for UI to generate
+    1. This might take a while, maybe 10 seconds or more
+4. Component pops up in movable space
+    1. Backend will know which space is available in the movable space
+
+Features
+- Components are draggable and can be laid out flexibly in whichever layout the user prefers
+- Components can be read-only or require interaction
+- If the components require interaction, they will use an MCP server
+- To start, we will just set up a timer that counts down to a specific time.
+
+Concerns
+- Browser permissions required for certain components (timer → notification)
+- Account setup required for some components (Calendar events → Google OAuth)
+
+Interaction
+- When backend generates a component, the position of the component should be specified
+- The frontend should indicate to the backend what the next grid position available is and/or how much grid space is available
+- When the user changes the position or size of the component, the backend should be notified so that state is stored.
+- When the user interacts with the component, the 
