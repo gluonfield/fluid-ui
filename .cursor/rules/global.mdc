@@ -31,3 +31,29 @@ Interaction
 - The frontend should indicate to the backend what the next grid position available is and/or how much grid space is available
 - When the user changes the position or size of the component, the backend should be notified so that state is stored.
 - When the user interacts with the component, the 
+
+
+# Backend endpoints
+
+## Get all components
+
+curl --request GET \
+  --url http://localhost:8000/ui/components \
+  --header 'User-Agent: insomnia/11.0.2'
+
+## Get Component by id 
+
+curl --request GET \
+  --url http://localhost:8000/ui/components/header1 \
+  --header 'User-Agent: insomnia/11.0.2'
+
+## Change Position
+
+curl --request PATCH \
+  --url http://localhost:8000/ui/components/position/header1 \
+  --header 'Content-Type: application/json' \
+  --header 'User-Agent: insomnia/11.0.2' \
+  --data '{
+    "x": 10,
+    "y": 12
+}'
