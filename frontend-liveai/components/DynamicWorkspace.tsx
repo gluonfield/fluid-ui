@@ -57,13 +57,39 @@ export function DynamicWorkspace({
     }))
   );
 
+  useEffect(() => {
+    // Update layout when components change
+    setLayout(
+      components.map((comp) => ({
+        i: comp.id,
+        x: comp.x,
+        y: comp.y,
+        w: comp.w,
+        h: comp.h,
+        minW: 2,
+        maxW: 12,
+        minH: 2,
+      }))
+    );
+  }, [components]);
+
   const handleLayoutChange = (newLayout: Layout[]) => {
-    setLayout(newLayout);
-    onLayoutChange?.(newLayout);
+    // Preserve width and height from components when updating layout
+    const updatedLayout = newLayout.map((item) => {
+      const component = components.find((c) => c.id === item.i);
+      return {
+        ...item,
+        w: component?.w || item.w,
+        h: component?.h || item.h,
+      };
+    });
+
+    setLayout(updatedLayout);
+    onLayoutChange?.(updatedLayout);
 
     // Notify about position changes
     if (onUpdatePosition) {
-      newLayout.forEach((item) => {
+      updatedLayout.forEach((item) => {
         const oldLayout = layout.find((l) => l.i === item.i);
         if (oldLayout && (oldLayout.x !== item.x || oldLayout.y !== item.y)) {
           onUpdatePosition(item.i, { x: item.x, y: item.y });
@@ -89,8 +115,8 @@ export function DynamicWorkspace({
           isBounded
         >
           {components.map((component) => (
-            <div key={component.id} className="group bg-gray-800 rounded-lg overflow-hidden">
-              <div className="component-drag-handle bg-gray-700 p-2 cursor-move flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div key={component.id} className="bg-gray-800 rounded-lg overflow-hidden">
+              <div className="component-drag-handle bg-gray-700 p-2 cursor-move flex justify-between items-center">
                 <div className="w-6 h-1 bg-gray-500 rounded" />
                 {onRemoveComponent && (
                   <button
