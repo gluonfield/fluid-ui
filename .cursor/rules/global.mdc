@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Frontend code is located at `frontend-liveai`
+- Backend code is located at `backend`

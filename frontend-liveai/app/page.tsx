@@ -1,8 +1,11 @@
 "use client";
 
 import { CloseIcon } from "@/components/CloseIcon";
+import { DynamicWorkspace } from "@/components/DynamicWorkspace";
 import { NoAgentNotification } from "@/components/NoAgentNotification";
 import TranscriptionView from "@/components/TranscriptionView";
+import { useAssistantResponseHandler } from "@/hooks/useAssistantResponseHandler";
+import { useComponentManager } from "@/hooks/useComponentManager";
 import {
   BarVisualizer,
   DisconnectButton,
@@ -19,6 +22,7 @@ import type { ConnectionDetails } from "./api/connection-details/route";
 
 export default function Page() {
   const [room] = useState(new Room());
+  const { components, addComponent, removeComponent } = useComponentManager();
 
   const onConnectButtonClicked = useCallback(async () => {
     // Generate room connection details, including:
@@ -39,7 +43,15 @@ export default function Page() {
 
     await room.connect(connectionDetailsData.serverUrl, connectionDetailsData.participantToken);
     await room.localParticipant.setMicrophoneEnabled(true);
-  }, [room]);
+
+    // Add a test component when connected
+    addComponent(
+      <div className="text-white">
+        <h3 className="text-lg font-bold mb-2">Test Component</h3>
+        <p>This is a test component that appears when you connect.</p>
+      </div>
+    );
+  }, [room, addComponent]);
 
   useEffect(() => {
     room.on(RoomEvent.MediaDevicesError, onDeviceFailure);
@@ -50,10 +62,15 @@ export default function Page() {
   }, [room]);
 
   return (
-    <main data-lk-theme="default" className="h-full grid content-center bg-[var(--lk-bg)]">
+    <main data-lk-theme="default" className="h-full bg-[var(--lk-bg)]">
       <RoomContext.Provider value={room}>
-        <div className="lk-room-container max-w-[1024px] w-[90vw] mx-auto max-h-[90vh]">
-          <SimpleVoiceAssistant onConnectButtonClicked={onConnectButtonClicked} />
+        <div className="flex h-full max-h-[90vh] gap-4 p-4">
+          <div className="flex-1 max-w-[600px]">
+            <SimpleVoiceAssistant onConnectButtonClicked={onConnectButtonClicked} />
+          </div>
+          <div className="flex-1">
+            <DynamicWorkspace components={components} onRemoveComponent={removeComponent} />
+          </div>
         </div>
       </RoomContext.Provider>
     </main>
@@ -62,6 +79,9 @@ export default function Page() {
 
 function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
   const { state: agentState } = useVoiceAssistant();
+  const { addComponent } = useComponentManager();
+
+  useAssistantResponseHandler({ onNewComponent: addComponent });
 
   return (
     <>
