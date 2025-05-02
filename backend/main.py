@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, TypedDict
-
+import agents as oai_agents
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import (
@@ -18,15 +18,24 @@ from myagent.tools import tools, ComponentResponse, data_tools
 import logging
 
 logging.basicConfig(
-    level=logging.INFO,  # or logging.DEBUG for more verbosity
+    level=logging.INFO, 
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Suppress debug logs from noisy libraries
+logging.getLogger("livekit").setLevel(logging.INFO)
+logging.getLogger("asyncio").setLevel(logging.WARNING)
+logging.getLogger("rustls").setLevel(logging.WARNING)
+logging.getLogger("tungstenite").setLevel(logging.WARNING)
 
 load_dotenv()
 client = OpenAI() 
 
 
+@oai_agents.function_tool
+def get_weather(city: str) -> str:
+    return f"The weather in {city} is sunny."
 
 class Assistant(Agent):
     """
@@ -80,27 +89,20 @@ class Assistant(Agent):
 
         args_json = msg.tool_calls[0].function.arguments
         data: ComponentResponse = json.loads(args_json)
+        print("COMPLETIONS DATA", data)
         
-        # data_completion = client.chat.completions.create(
-        #     model="gpt-4o",
-        #     temperature=0.3,
-        #     max_tokens=1_024,
-        #     tool_choice={"type": "function", "function": {"name": "create_component"}},
-        #     tools=data_tools,
-        #     messages=[
-        #         {
-        #             "role": "system",
-        #             "content": (
-        #                 f"Call the appropriate tool to obtain data and return it in the form compatible with the schema below: {data.input_schema}."
-        #             ),
-        #         },
-        #         {"role": "user", "content": instruction},
-        #     ],
-        # )
+        oai_agent = oai_agents.Agent(
+        name="Component Helper",
+        instructions="Your job is to obtain the data in the format of json from the twitter api. Return your data response in the format of json.",
+            # tools=[get_weather],
+        )
         
-        # data_args_json = data_completion.choices[0].message.tool_calls[0]
-        # print("Data returned: ", data_args_json)
-                
+        agent_instruction = f"Generate data in the following format: {data['input_schema']}. This data is used in a widget component originating from the following instruction: {instruction}"
+        oai_result = await oai_agents.Runner.run(
+                oai_agent,
+                input=agent_instruction
+        )
+        print("OPENAI DATA", oai_result.final_output)  
         logger.debug(f"data: {data}")
         return {"status": "success"}
 
