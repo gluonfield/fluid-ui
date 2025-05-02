@@ -10,10 +10,11 @@ export function useComponentManager() {
   React.useEffect(() => {
     const fetchComponents = async () => {
       try {
-        const apiComponents = await apiFetch("/ui/components");
+        const apiComponents = await fetch("/api/backend/ui/components");
+        const data = await apiComponents.json();
 
         // Transform API components to DynamicComponents
-        const dynamicComponents = apiComponents.map((component: ApiComponent) => ({
+        const dynamicComponents = data.map((component: ApiComponent) => ({
           id: component.id,
           content: <div className="text-white">{component.content}</div>,
           x: component.x,

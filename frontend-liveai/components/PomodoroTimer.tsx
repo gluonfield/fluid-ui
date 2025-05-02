@@ -35,7 +35,7 @@ export function PomodoroTimer({ initialMinutes = 25 }: PomodoroTimerProps) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning]);
+  }, [isRunning, timeLeft]);
 
   const toggleTimer = () => {
     if (!isRunning && timeLeft === 0) {
