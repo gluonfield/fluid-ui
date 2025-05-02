@@ -14,7 +14,7 @@ from livekit.agents import (
 )
 from livekit.plugins import openai, noise_cancellation
 from openai import OpenAI
-from agent.tools import tools, ComponentResponse, data_tools
+from myagent.tools import tools, ComponentResponse, data_tools
 import logging
 
 logging.basicConfig(
