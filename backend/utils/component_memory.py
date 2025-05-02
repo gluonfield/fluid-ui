@@ -22,9 +22,11 @@ class ComponentMemory:
             return self.memory_store[component_id]
         return None
     
-    def change_position(self, component_id, x, y):
+    def change_position(self, component_id, x, y, w, h):
         self.memory_store[component_id]['x'] = x
         self.memory_store[component_id]['y'] = y
+        self.memory_store[component_id]['w'] = w
+        self.memory_store[component_id]['h'] = h
 
     def change_height(self, component_id, height):
         self.memory_store[component_id]['h'] = height
