@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from typing import Any, TypedDict
+from tools.news_tool import get_latest_news
+from tools.tiktok_tool import get_tiktok_videos
 import agents as oai_agents
 from dotenv import load_dotenv
 from livekit import agents
@@ -106,13 +108,14 @@ class Assistant(Agent):
         oai_agent = oai_agents.Agent(
         name="Component Helper",
         instructions="Your job is to obtain the data in the format of json from the twitter api. Return your data response in the format of json.",
-            tools=[get_twitter_data],
+        tools=[get_tiktok_videos, get_latest_news],
         )
         
         agent_instruction = f"Generate data in the following format: {data['input_schema']}. This data is used in a widget component originating from the following instruction: {instruction}. You must not start with ``` or any other text. Return RAW json."
         oai_result = await oai_agents.Runner.run(
                 oai_agent,
-                input=agent_instruction
+                input=agent_instruction,
+                
         )
         print("OPENAI DATA", oai_result.final_output)  
         logger.debug(f"data: {data}")
