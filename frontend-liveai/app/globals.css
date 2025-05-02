@@ -18,3 +18,24 @@
 .lk-disconnect-button {
   @apply h-[36px] hover:bg-[#6b221a] hover:text-[white] bg-[#31100c] border-[#6b221a];
 }
+
+/* Grid Layout Styles */
+.react-grid-layout {
+  @apply relative transition-[height] duration-200;
+}
+
+.react-grid-item {
+  @apply transition-all duration-200 border border-gray-700;
+}
+
+.react-grid-item.react-grid-placeholder {
+  @apply bg-blue-500/20 border-2 border-blue-500;
+}
+
+.react-resizable-handle {
+  @apply absolute w-5 h-5 right-0 bottom-0 bg-transparent cursor-se-resize;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  @apply content-[''] absolute right-1 bottom-1 w-3 h-3 border-r-2 border-b-2 border-gray-400;
+}

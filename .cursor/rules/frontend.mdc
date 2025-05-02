@@ -1,0 +1,12 @@
+---
+description: 
+globs: frontend-liveai/**/*.*
+alwaysApply: false
+---
+
+
+# UI architecture
+
+- all UI should be performant
+- Use Typescript, React, tailwind, and shadcn
+- DO NOT GENERATE COMMENTS UNLESS THE SOLUTION IS EXTREMELY COMPLEX
