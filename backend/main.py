@@ -69,7 +69,7 @@ class Assistant(Agent):
         instruction: str,
     ) -> Any:
         """
-        Build a self-contained React component in shadcn style.
+        Build a self-contained html React component in tailwind styles.
 
         Args:
             instruction: Human-readable request describing the UI component.
@@ -81,7 +81,7 @@ class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(
             instructions=(
-                "You are a helpful AI assistant that can build React "
+                "You are a helpful AI assistant that can build React"
                 "components via the `generate_component` tool. You speak in consise and light-hearted manner. You're chill and friendly. When you finish a task, you say something like 'Done!'. Spice it up, but keep it short and concise."
             )
         )
@@ -128,7 +128,7 @@ async def execute(instruction: str, context: RunContext):
                 "role": "system",
                 "content": (
                     "You are a senior front-end engineer. "
-                    "For the user's request, call `create_component` exactly once. You must create a valid React component that can be embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component. You shouldssume all existing shadcn imports and tailwind available. For example twitter component should return a list of data such as handle, message and time. And instagram or tiktok component should return a list of data such as image, caption and username."
+                    "For the user's request, call `create_component` exactly once. You must create a valid React component that can be embedded in the middle of existing application code. It should not contain \n characters, should be executable code. It must not contain any imports. It must just be a component and begin with <div> and end with </div>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component. You shouldssume all existing shadcn imports and tailwind available. For example twitter component should return a list of data such as handle, message and time. And instagram or tiktok component should return a list of data such as image, caption and username."
                 ),
             },
             {"role": "user", "content": instruction},
@@ -144,6 +144,8 @@ async def execute(instruction: str, context: RunContext):
     print("COMPLETIONS DATA", data)
     
     agent_instruction = f"Retrieve the data using appropriate tools and return it in the following format: {data['input_schema']}. The input data is used for the following React component {data['code']}. This data is used in a widget component originating from the following instruction: {instruction}. You must not start with ``` or any other text. Return RAW json."
+    
+    # agent_instruction = f"Retrieve the data using appropriate tools and return it in the following format: {data['input_schema']}. This should be compatible with the following react component {data['code']}. Return the final react component with the data inplicitly in the code. The component should be placed anywhere in the code, any data you return must exist inside the component not to raise the errors. It should not contain imports, exports or anything beside inplace code."
     
     oai_agent = oai_agents.Agent(
         name="Data retriever and formatter agent",
