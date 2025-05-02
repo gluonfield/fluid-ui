@@ -11,3 +11,7 @@ pip install -r requirements.txt
 uv
 python main.py dev
 ```
+
+```sh
+uvicorn server:app --reload
+```
