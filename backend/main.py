@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from typing import Any, TypedDict
+from tools.news_tool import get_latest_news
+from tools.tiktok_tool import get_tiktok_videos
 import agents as oai_agents
 from dotenv import load_dotenv
 from livekit import agents
@@ -16,6 +18,7 @@ from livekit.plugins import openai, noise_cancellation
 from openai import OpenAI
 from myagent.tools import tools, ComponentResponse, data_tools
 import logging
+import asyncio
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -66,62 +69,19 @@ class Assistant(Agent):
         instruction: str,
     ) -> Any:
         """
-        Build a self-contained React component in shadcn style.
+        Build a self-contained html React component in tailwind styles.
 
         Args:
             instruction: Human-readable request describing the UI component.
         Returns:
             dict with keys `code` and `input`.
         """
-        logger.info(f"Generating component for: {instruction}")
-        logger.debug(f"RunContext: {context}")
-
-        logger.info("Generating component...")
-        completion = client.chat.completions.create(
-            model="gpt-4o",
-            temperature=0.3,
-            max_tokens=1_024,
-            tool_choice={"type": "function", "function": {"name": "create_component"}},
-            tools=tools,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a senior front-end engineer. "
-                        "For the user's request, call `create_component` exactly once. You must create a valid React component that can be embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component. You shouldssume all existing shadcn imports and tailwind available."
-                    ),
-                },
-                {"role": "user", "content": instruction},
-            ],
-        )
-        logger.info("Component generated")
-        msg = completion.choices[0].message
-        if not msg.tool_calls:
-            raise RuntimeError("Model did not return a tool call!")
-
-        args_json = msg.tool_calls[0].function.arguments
-        data: ComponentResponse = json.loads(args_json)
-        print("COMPLETIONS DATA", data)
-        
-        oai_agent = oai_agents.Agent(
-        name="Component Helper",
-        instructions="Your job is to obtain the data in the format of json from the twitter api. Return your data response in the format of json.",
-            tools=[get_twitter_data],
-        )
-        
-        agent_instruction = f"Generate data in the following format: {data['input_schema']}. This data is used in a widget component originating from the following instruction: {instruction}. You must not start with ``` or any other text. Return RAW json."
-        oai_result = await oai_agents.Runner.run(
-                oai_agent,
-                input=agent_instruction
-        )
-        print("OPENAI DATA", oai_result.final_output)  
-        logger.debug(f"data: {data}")
-        return {"status": "success"}
+        return await execute(instruction, context)
 
     def __init__(self) -> None:
         super().__init__(
             instructions=(
-                "You are a helpful AI assistant that can build React "
+                "You are a helpful AI assistant that can build React"
                 "components via the `generate_component` tool. You speak in consise and light-hearted manner. You're chill and friendly. When you finish a task, you say something like 'Done!'. Spice it up, but keep it short and concise."
             )
         )
@@ -151,6 +111,56 @@ async def entrypoint(ctx: agents.JobContext):
         )
     )
 
+async def execute(instruction: str, context: RunContext):
+    print("INSTRUCTION", instruction)
+    logger.info(f"Generating component for: {instruction}")
+    logger.debug(f"RunContext: {context}")
+
+    logger.info("Generating component...")
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        temperature=0.3,
+        max_tokens=1_024,
+        tool_choice={"type": "function", "function": {"name": "create_component"}},
+        tools=tools,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a senior front-end engineer. "
+                    "For the user's request, call `create_component` exactly once. You must create a valid React component that can be embedded in the middle of existing application code. It should not contain \n characters, should be executable code. It must not contain any imports. It must just be a component and begin with <div> and end with </div>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component. You shouldssume all existing shadcn imports and tailwind available. For example twitter component should return a list of data such as handle, message and time. And instagram or tiktok component should return a list of data such as image, caption and username."
+                ),
+            },
+            {"role": "user", "content": instruction},
+        ],
+    )
+    logger.info("Component generated")
+    msg = completion.choices[0].message
+    if not msg.tool_calls:
+        raise RuntimeError("Model did not return a tool call!")
+
+    args_json = msg.tool_calls[0].function.arguments
+    data: ComponentResponse = json.loads(args_json)
+    print("COMPLETIONS DATA", data)
+    
+    agent_instruction = f"Retrieve the data using appropriate tools and return it in the following format: {data['input_schema']}. The input data is used for the following React component {data['code']}. This data is used in a widget component originating from the following instruction: {instruction}. You must not start with ``` or any other text. Return RAW json."
+    
+    # agent_instruction = f"Retrieve the data using appropriate tools and return it in the following format: {data['input_schema']}. This should be compatible with the following react component {data['code']}. Return the final react component with the data inplicitly in the code. The component should be placed anywhere in the code, any data you return must exist inside the component not to raise the errors. It should not contain imports, exports or anything beside inplace code."
+    
+    oai_agent = oai_agents.Agent(
+        name="Data retriever and formatter agent",
+        instructions=agent_instruction,
+        tools=[get_tiktok_videos, get_latest_news],
+    )
+
+    oai_result = await oai_agents.Runner.run(
+        oai_agent,
+        input=agent_instruction
+    )
+    print("OPENAI DATA", oai_result.final_output)  
+    logger.debug(f"data: {data}")
+    return {"status": "success"}
 
 if __name__ == "__main__":
-    agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
+    asyncio.run(execute("Generate a component to display news about cats", None))
+    # agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
