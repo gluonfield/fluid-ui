@@ -51,6 +51,9 @@ export function DynamicWorkspace({
       y: comp.y,
       w: comp.w,
       h: comp.h,
+      minW: 2, // Minimum width of 2 units
+      maxW: 12, // Maximum width of full grid
+      minH: 2, // Minimum height of 2 units (60px)
     }))
   );
 
@@ -81,6 +84,9 @@ export function DynamicWorkspace({
           onLayoutChange={handleLayoutChange}
           draggableHandle=".component-drag-handle"
           margin={[16, 16]}
+          compactType="vertical"
+          preventCollision={false}
+          isBounded
         >
           {components.map((component) => (
             <div key={component.id} className="bg-gray-800 rounded-lg overflow-hidden">
