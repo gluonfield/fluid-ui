@@ -34,8 +34,20 @@ client = OpenAI()
 
 
 @oai_agents.function_tool
-def get_weather(city: str) -> str:
-    return f"The weather in {city} is sunny."
+def get_twitter_data(instruction: str) -> str:
+    data = [
+        {
+            "id": 1,
+            "handle": "John Doe",
+            "message": "New York"
+        },
+        {
+            "id": 2,
+            "handle": "John Doe",
+            "message": "New York"
+        },
+    ]
+    return json.dumps(data)
 
 class Assistant(Agent):
     """
@@ -94,7 +106,7 @@ class Assistant(Agent):
         oai_agent = oai_agents.Agent(
         name="Component Helper",
         instructions="Your job is to obtain the data in the format of json from the twitter api. Return your data response in the format of json.",
-            tools=[get_weather],
+            tools=[get_twitter_data],
         )
         
         agent_instruction = f"Generate data in the following format: {data['input_schema']}. This data is used in a widget component originating from the following instruction: {instruction}. You must not start with ``` or any other text. Return RAW json."
