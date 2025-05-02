@@ -7,6 +7,89 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    // Text styles
+    {
+      pattern: /^text-/,
+      variants: ['hover', 'focus', 'lg', 'xl', '2xl'],
+    },
+    {
+      pattern: /^font-/,
+    },
+    // Background colors
+    {
+      pattern: /^bg-/,
+      variants: ['hover', 'focus'],
+    },
+    // Spacing
+    {
+      pattern: /^(m|p)[txyrblf]?-/,
+    },
+    // Flexbox & Grid
+    'flex',
+    'grid',
+    {
+      pattern: /^(flex|grid)-/,
+    },
+    {
+      pattern: /^(items|justify|content)-/,
+    },
+    // Sizing
+    {
+      pattern: /^(w|h)-/,
+    },
+    // Borders
+    {
+      pattern: /^(border|rounded)/,
+      variants: ['hover', 'focus'],
+    },
+    // Transitions
+    {
+      pattern: /^transition/,
+    },
+    // Shadows
+    {
+      pattern: /^shadow/,
+    },
+    // States
+    'hover:',
+    'focus:',
+    'active:',
+    'disabled:',
+    // Layout
+    'absolute',
+    'relative',
+    'fixed',
+    'sticky',
+    'inset-0',
+    // Display
+    'block',
+    'inline-block',
+    'inline',
+    'hidden',
+    // Common component classes
+    'card',
+    'button',
+    'input',
+    'label',
+    // Specific utility classes commonly used in components
+    'overflow-hidden',
+    'cursor-pointer',
+    'select-none',
+    'text-xs',
+    'text-sm',
+    'text-base',
+    'text-lg',
+    'text-xl',
+    'text-2xl',
+    'bg-blue-500',
+    'bg-red-500',
+    'bg-green-500',
+    'bg-yellow-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    
+  ],
   theme: {
   	extend: {
   		borderRadius: {

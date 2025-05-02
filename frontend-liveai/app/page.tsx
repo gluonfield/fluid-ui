@@ -39,7 +39,8 @@ export default function Page() {
       `<div className="text-white">
         <h3 className="text-lg font-bold mb-2">Test Component</h3>
         <p>This is a test component that appears when you connect.</p>
-      </div>`
+      </div>`,
+      `{"data": "test data"}`
     );
   }, [room, addComponent]);
 

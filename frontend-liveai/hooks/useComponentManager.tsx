@@ -3,7 +3,8 @@ import DynamicComponent from "../components/DynamicComponent";
 
 interface Component {
   id: string;
-  component: string;
+  comp: string;
+  data: string;
   x: number;
   y: number;
   w: number;
@@ -39,10 +40,11 @@ export function useComponentManager() {
   }, []);
 
   const addComponent = React.useCallback(
-    (component: string) => {
+    (comp: string, data: string) => {
       const newComponent: Component = {
         id: `component-${components.length}`,
-        component,
+        comp,
+        data,
         x: (components.length * 4) % 12,
         y: Math.floor(components.length / 3) * 4,
         w: 4,
@@ -95,7 +97,8 @@ export function useComponentManager() {
           }}
         >
           <DynamicComponent
-            componentString={component.component}
+            componentString={component.comp}
+            data={JSON.parse(component.data)}
             props={{
               onPositionChange: (x: number, y: number) => updatePosition(component.id, { x, y }),
             }}

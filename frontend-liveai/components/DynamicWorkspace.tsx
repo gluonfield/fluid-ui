@@ -7,7 +7,8 @@ import DynamicComponent from "./DynamicComponent";
 
 export interface DynamicComponent {
   id: string;
-  component: string;
+  comp: string;
+  data: string;
   x: number;
   y: number;
   w: number;
@@ -149,7 +150,10 @@ export function DynamicWorkspace({
                   </button>
                 )}
               </div>
-              <DynamicComponent componentString={component.component} />
+              <DynamicComponent
+                componentString={component.comp}
+                data={JSON.parse(component.data)}
+              />
             </div>
           ))}
         </GridLayout>
