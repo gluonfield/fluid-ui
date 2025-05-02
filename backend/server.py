@@ -10,7 +10,7 @@ app = FastAPI()
 class UIComponent(BaseModel):
     id: str
     comp: str 
-    data: Dict[str, str]
+    data: str
     x: float
     y: float
     w: float
@@ -29,6 +29,11 @@ async def get_ui(component_id: str):
         return component
     else:
         return {"message": "Component not found"}
+    
+@app.post("/ui/components")
+async def get_ui(component: UIComponent = None):
+    component_mem.add_component(component_id=component.id, component=component)
+    return {"status": "success"}
     
 @app.get("/ui/components")
 async def get_all_ui():
