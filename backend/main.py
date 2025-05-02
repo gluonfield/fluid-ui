@@ -14,44 +14,19 @@ from livekit.agents import (
 )
 from livekit.plugins import openai, noise_cancellation
 from openai import OpenAI
+from agent.tools import tools, ComponentResponse
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,  # or logging.DEBUG for more verbosity
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 client = OpenAI() 
 
 
-class ComponentResponse(TypedDict):
-    code: str  
-    input: str
-
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "create_component",
-            "description": (
-                "Return code for a react component that can be directly embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "description": (
-                            "The complete source of the React component. It should not contain any imports and should be directly embeddable in the code"
-                        ),
-                    },
-                    "input": {
-                        "type": "string",
-                        "description": (
-                            "Stringified JSON of props to demo the component."
-                        ),
-                    },
-                },
-                "required": ["code", "input"],
-            },
-        },
-    }
-]
 
 class Assistant(Agent):
     """
@@ -77,14 +52,14 @@ class Assistant(Agent):
         Returns:
             dict with keys `code` and `input`.
         """
-        print(f"Generating component for: {instruction}")
-        print(f"RunContext: {context}")
+        logger.info(f"Generating component for: {instruction}")
+        logger.debug(f"RunContext: {context}")
 
-
-        print("Generating component...")
+        logger.info("Generating component...")
         completion = client.chat.completions.create(
             model="gpt-4o",
             temperature=0.3,
+            max_tokens=1_024,
             tool_choice={"type": "function", "function": {"name": "create_component"}},
             tools=tools,
             messages=[
@@ -92,28 +67,27 @@ class Assistant(Agent):
                     "role": "system",
                     "content": (
                         "You are a senior front-end engineer. "
-                        "For the user’s request, call `create_component` exactly once."
+                        "For the user's request, call `create_component` exactly once."
                     ),
                 },
                 {"role": "user", "content": instruction},
             ],
         )
-        print("Component generated")
+        logger.info("Component generated")
         msg = completion.choices[0].message
         if not msg.tool_calls:
             raise RuntimeError("Model did not return a tool call!")
 
-        # gpt-4o (April-2024+):  tool_calls is always a list
         args_json = msg.tool_calls[0].function.arguments
         data: ComponentResponse = json.loads(args_json)
-        print("data",data)
+        logger.debug(f"data: {data}")
         return {"status": "success"}
 
     def __init__(self) -> None:
         super().__init__(
             instructions=(
                 "You are a helpful AI assistant that can build React "
-                "components via the `generate_component` tool."
+                "components via the `generate_component` tool. You speak in consise and light-hearted manner. You're chill and friendly. When you finish a task, you say something like 'Done!'. Spice it up, but keep it short and concise."
             )
         )
 
@@ -137,8 +111,8 @@ async def entrypoint(ctx: agents.JobContext):
 
     await session.generate_reply(
         instructions=(
-            "Hi there! I’m ready to craft React components for you. "
-            "Just tell me what you need."
+            "Hi there! I'm ready to help to build your homespace personalised to you."
+            "What would you like to see?."
         )
     )
 
