@@ -10,7 +10,7 @@ def get_latest_news(keyword: str) -> List[Dict]:
     news_input = {
         "fetchArticleDetails": True,
         "language": "US:en",
-        "maxItems": 10,
+        "maxItems": 5,
         "proxyConfiguration": {
             "useApifyProxy": True
         },

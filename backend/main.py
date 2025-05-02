@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, TypedDict
+from add_component import add_ui_component
 from tools.news_tool import get_latest_news
 from tools.tiktok_tool import get_tiktok_videos
 import agents as oai_agents
@@ -19,6 +20,7 @@ from openai import OpenAI
 from myagent.tools import tools, ComponentResponse, data_tools
 import logging
 import asyncio
+import uuid
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -159,6 +161,17 @@ async def execute(instruction: str, context: RunContext):
     )
     print("OPENAI DATA", oai_result.final_output)  
     logger.debug(f"data: {data}")
+
+    component = {
+        "id": str(uuid.uuid4()),
+        "comp": data["code"],
+        "data": json.loads(oai_result.final_output),
+        "x": 0.0,
+        "y": 0.0,
+        "w": 100.0,
+        "h": 100.0
+    }
+    add_ui_component(component)
     return {"status": "success"}
 
 if __name__ == "__main__":
