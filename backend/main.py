@@ -1,44 +1,120 @@
-from dotenv import load_dotenv
-from typing import Any
+from __future__ import annotations
 
+import json
+from typing import Any, TypedDict
+
+from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import (
-    AgentSession,
     Agent,
+    AgentSession,
     RoomInputOptions,
-    function_tool,
     RunContext,
+    function_tool,
 )
-from livekit.plugins import (
-    openai,
-    noise_cancellation,
-)
+from livekit.plugins import openai, noise_cancellation
+from openai import OpenAI
 
 load_dotenv()
+client = OpenAI() 
 
+
+class ComponentResponse(TypedDict):
+    code: str  
+    input: str
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "create_component",
+            "description": (
+                "Return code for a react component that can be directly embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": (
+                            "The complete source of the React component. It should not contain any imports and should be directly embeddable in the code"
+                        ),
+                    },
+                    "input": {
+                        "type": "string",
+                        "description": (
+                            "Stringified JSON of props to demo the component."
+                        ),
+                    },
+                },
+                "required": ["code", "input"],
+            },
+        },
+    }
+]
 
 class Assistant(Agent):
-    msg = "Your name is Johny Sins. You are virtual twin of your human with an knowledge of everything about me. You are helpful and help with all tasks."
+    """
+    Generates plug-and-play React components on demand.
+
+    The heavy lifting is delegated to GPT-4o through function-calling:
+    GPT-4o is *forced* to call the synthetic function `create_component`,
+    returning its arguments (code & props) in structured JSON — no manual
+    parsing of free-form text required.
+    """
 
     @function_tool()
-    async def lookup_weather(
+    async def generate_component(
         self,
         context: RunContext,
-        location: str,
-    ) -> dict[str, Any]:
-        print(f"Looking up weather for {location}")
-        print(f"Context: {context}")
-        """Look up weather information for a given location.
+        instruction: str,
+    ) -> Any:
+        """
+        Build a self-contained React component in shadcn style.
 
         Args:
-            location: The location to look up weather information for.
+            instruction: Human-readable request describing the UI component.
+        Returns:
+            dict with keys `code` and `input`.
         """
+        print(f"Generating component for: {instruction}")
+        print(f"RunContext: {context}")
 
-        return {"weather": "sunny", "temperature_f": 70}
+
+        print("Generating component...")
+        completion = client.chat.completions.create(
+            model="gpt-4o",
+            temperature=0.3,
+            tool_choice={"type": "function", "function": {"name": "create_component"}},
+            tools=tools,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a senior front-end engineer. "
+                        "For the user’s request, call `create_component` exactly once."
+                    ),
+                },
+                {"role": "user", "content": instruction},
+            ],
+        )
+        print("Component generated")
+        msg = completion.choices[0].message
+        if not msg.tool_calls:
+            raise RuntimeError("Model did not return a tool call!")
+
+        # gpt-4o (April-2024+):  tool_calls is always a list
+        args_json = msg.tool_calls[0].function.arguments
+        data: ComponentResponse = json.loads(args_json)
+        print("data",data)
+        return {"status": "success"}
 
     def __init__(self) -> None:
         super().__init__(
-            instructions="Your name is Johny Sins. You are digital twin of your human with an knowledge of everything about me. Don't be too enthusiastic. Be human like. Your human is a cofounder of a startup and works incredibly hard. THey need to be 100% efficient all the time and stay focused. Be helpful and friendly. It's midnight, so adjust your tone appropriately."
+            instructions=(
+                "You are a helpful AI assistant that can build React "
+                "components via the `generate_component` tool."
+            )
         )
 
 
@@ -60,7 +136,10 @@ async def entrypoint(ctx: agents.JobContext):
     )
 
     await session.generate_reply(
-        instructions="Suggest human to go to sleep as it's pretty late."
+        instructions=(
+            "Hi there! I’m ready to craft React components for you. "
+            "Just tell me what you need."
+        )
     )
 
 
