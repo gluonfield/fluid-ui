@@ -22,7 +22,7 @@ import type { ConnectionDetails } from "./api/connection-details/route";
 
 export default function Page() {
   const [room] = useState(new Room());
-  const { components, addComponent, removeComponent } = useComponentManager();
+  const { components, addComponent, removeComponent, updatePosition } = useComponentManager();
 
   const onConnectButtonClicked = useCallback(async () => {
     // Generate room connection details, including:
@@ -69,7 +69,11 @@ export default function Page() {
             <SimpleVoiceAssistant onConnectButtonClicked={onConnectButtonClicked} />
           </div>
           <div className="flex-1">
-            <DynamicWorkspace components={components} onRemoveComponent={removeComponent} />
+            <DynamicWorkspace
+              components={components}
+              onRemoveComponent={removeComponent}
+              onUpdatePosition={updatePosition}
+            />
           </div>
         </div>
       </RoomContext.Provider>
