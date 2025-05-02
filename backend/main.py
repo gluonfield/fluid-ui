@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from typing import Any, TypedDict
+from tools.news_tool import get_latest_news
+from tools.tiktok_tool import get_tiktok_videos
 import agents as oai_agents
 from dotenv import load_dotenv
 from livekit import agents
@@ -110,7 +112,6 @@ async def entrypoint(ctx: agents.JobContext):
     )
 
 async def execute(instruction: str, context: RunContext):
-    instruction = "Generate a twitter widget component"
     print("INSTRUCTION", instruction)
     logger.info(f"Generating component for: {instruction}")
     logger.debug(f"RunContext: {context}")
@@ -147,7 +148,7 @@ async def execute(instruction: str, context: RunContext):
     oai_agent = oai_agents.Agent(
         name="Data retriever and formatter agent",
         instructions=agent_instruction,
-        tools=[get_twitter_data],
+        tools=[get_tiktok_videos, get_latest_news],
     )
 
     oai_result = await oai_agents.Runner.run(
@@ -159,5 +160,5 @@ async def execute(instruction: str, context: RunContext):
     return {"status": "success"}
 
 if __name__ == "__main__":
-    asyncio.run(execute("Generate a twitter widget component", None))
+    asyncio.run(execute("Generate a component to display news about cats", None))
     # agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
