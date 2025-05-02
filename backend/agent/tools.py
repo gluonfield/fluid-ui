@@ -10,7 +10,7 @@ tools = [
         "function": {
             "name": "create_component",
             "description": (
-                "Return code for a react component that can be directly embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>."
+                "Return code for a react component that can be directly embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component."
             ),
             "parameters": {
                 "type": "object",
