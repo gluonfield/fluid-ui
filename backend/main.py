@@ -18,27 +18,27 @@ load_dotenv()
 
 
 class Assistant(Agent):
-    msg = "Your name is Johny Sins. You are virtual twin of your human with an knowledge of everything about me. You are helpful and help with all tasks."
+    msg = "You are helpful AI assistant. You are able to generate UI components for a given task by the use of a single tool."
 
     @function_tool()
-    async def lookup_weather(
+    async def generate_component(
         self,
         context: RunContext,
-        location: str,
+        instruction: str,
     ) -> dict[str, Any]:
-        print(f"Looking up weather for {location}")
+        print(f"Generating component for {instruction}")
         print(f"Context: {context}")
-        """Look up weather information for a given location.
+        """Generate a UI component for a given task.
 
         Args:
-            location: The location to look up weather information for.
+            instruction: What component should be generated and what it should do.
         """
 
-        return {"weather": "sunny", "temperature_f": 70}
+        return {"status": "success"}
 
     def __init__(self) -> None:
         super().__init__(
-            instructions="Your name is Johny Sins. You are digital twin of your human with an knowledge of everything about me. Don't be too enthusiastic. Be human like. Your human is a cofounder of a startup and works incredibly hard. THey need to be 100% efficient all the time and stay focused. Be helpful and friendly. It's midnight, so adjust your tone appropriately."
+            instructions="You are helpful AI assistant. You are able to generate UI components for a given task."
         )
 
 
@@ -60,7 +60,7 @@ async def entrypoint(ctx: agents.JobContext):
     )
 
     await session.generate_reply(
-        instructions="Suggest human to go to sleep as it's pretty late."
+        instructions="You are helpful AI assistant. You are able to generate UI components for a given task. Respond with a playful and positive short message. Don't go into details of what has been done."
     )
 
 
