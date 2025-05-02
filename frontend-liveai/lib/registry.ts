@@ -17,7 +17,7 @@ export interface ComponentMeta {
 }
 
 // Registry entry type
-export interface RegistryEntry<Props = any> {
+export interface RegistryEntry<Props = unknown> {
   component: ComponentType<Props>;
   meta: ComponentMeta;
 }

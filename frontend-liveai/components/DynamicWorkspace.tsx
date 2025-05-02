@@ -125,15 +125,13 @@ export function DynamicWorkspace({
           className="layout"
           layout={layout}
           cols={12}
-          rowHeight={30}
+          rowHeight={12}
           width={containerWidth - 32}
           onLayoutChange={handleLayoutChange}
           draggableHandle=".component-drag-handle"
           margin={[16, 16]}
           compactType={null}
           preventCollision={false}
-          isBounded
-          useCSSTransforms={true}
           isResizable={true}
           isDraggable={true}
         >
