@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, TypedDict
-
+import agents as oai_agents
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import (
@@ -14,19 +14,40 @@ from livekit.agents import (
 )
 from livekit.plugins import openai, noise_cancellation
 from openai import OpenAI
-from agent.tools import tools, ComponentResponse
+from myagent.tools import tools, ComponentResponse, data_tools
 import logging
 
 logging.basicConfig(
-    level=logging.INFO,  # or logging.DEBUG for more verbosity
+    level=logging.INFO, 
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Suppress debug logs from noisy libraries
+logging.getLogger("livekit").setLevel(logging.INFO)
+logging.getLogger("asyncio").setLevel(logging.WARNING)
+logging.getLogger("rustls").setLevel(logging.WARNING)
+logging.getLogger("tungstenite").setLevel(logging.WARNING)
 
 load_dotenv()
 client = OpenAI() 
 
 
+@oai_agents.function_tool
+def get_twitter_data(instruction: str) -> str:
+    data = [
+        {
+            "id": 1,
+            "handle": "John Doe",
+            "message": "New York"
+        },
+        {
+            "id": 2,
+            "handle": "John Doe",
+            "message": "New York"
+        },
+    ]
+    return json.dumps(data)
 
 class Assistant(Agent):
     """
@@ -67,7 +88,7 @@ class Assistant(Agent):
                     "role": "system",
                     "content": (
                         "You are a senior front-end engineer. "
-                        "For the user's request, call `create_component` exactly once."
+                        "For the user's request, call `create_component` exactly once. You must create a valid React component that can be embedded in the middle of existing application code. It must not contain any imports. It must just be a component and begin with <ComponentName> and end with </ComponentName>. Make sure the input_schema is as simple as possible, only include data fields that are required to render the component. You shouldssume all existing shadcn imports and tailwind available."
                     ),
                 },
                 {"role": "user", "content": instruction},
@@ -80,6 +101,20 @@ class Assistant(Agent):
 
         args_json = msg.tool_calls[0].function.arguments
         data: ComponentResponse = json.loads(args_json)
+        print("COMPLETIONS DATA", data)
+        
+        oai_agent = oai_agents.Agent(
+        name="Component Helper",
+        instructions="Your job is to obtain the data in the format of json from the twitter api. Return your data response in the format of json.",
+            tools=[get_twitter_data],
+        )
+        
+        agent_instruction = f"Generate data in the following format: {data['input_schema']}. This data is used in a widget component originating from the following instruction: {instruction}. You must not start with ``` or any other text. Return RAW json."
+        oai_result = await oai_agents.Runner.run(
+                oai_agent,
+                input=agent_instruction
+        )
+        print("OPENAI DATA", oai_result.final_output)  
         logger.debug(f"data: {data}")
         return {"status": "success"}
 
