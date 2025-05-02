@@ -165,7 +165,7 @@ async def execute(instruction: str, context: RunContext):
     component = {
         "id": str(uuid.uuid4()),
         "comp": data["code"],
-        "data": json.loads(oai_result.final_output),
+        "data": str(json.loads(oai_result.final_output)),
         "x": 0.0,
         "y": 0.0,
         "w": 100.0,

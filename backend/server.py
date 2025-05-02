@@ -10,7 +10,7 @@ app = FastAPI()
 class UIComponent(BaseModel):
     id: str
     comp: str 
-    data: Dict
+    data: str
     x: float
     y: float
     w: float
