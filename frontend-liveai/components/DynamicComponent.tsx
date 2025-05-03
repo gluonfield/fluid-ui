@@ -214,7 +214,13 @@ const DynamicComponent: React.FC<DynamicComponentProps> = ({
     }
 
     return (
-      <div className={cn("w-full h-full dynamic-component", ...tailwindClasses, className)}>
+      <div
+        className={cn(
+          "w-full h-full dynamic-component overflow-auto",
+          ...tailwindClasses,
+          className
+        )}
+      >
         {element}
       </div>
     );
