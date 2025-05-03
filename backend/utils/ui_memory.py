@@ -1,11 +1,19 @@
 from typing import Dict
 from utils.dummy_components import components
 
-class ComponentMemory:
+class UIMemory:
     def __init__(self):
         self.memory_store: Dict[str, Dict[str, Dict]] = {}
+        self.ui_width = 500
+        self.ui_height = 500
         for component in components:
             self.add_component(component["id"], component)
+
+    def change_ui_size(self, ui_width, ui_height):
+        if ui_width:
+            self.ui_width = ui_width
+        if ui_height:
+            self.ui_height = ui_height
 
     def add_component(self, component_id, component):
         self.memory_store[component_id] = component
@@ -34,7 +42,7 @@ class ComponentMemory:
     def change_width(self, component_id, width):
         self.memory_store[component_id]['w'] = width
 
-component_mem = ComponentMemory()
+ui_mem = UIMemory()
 
 
 

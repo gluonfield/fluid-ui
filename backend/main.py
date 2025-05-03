@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, TypedDict
-from add_component import add_ui_component
+from backend.utils.backend_sdk import BackendSDK
 from tools.news_tool import get_latest_news
 from tools.tiktok_tool import get_tiktok_videos
 import agents as oai_agents
@@ -36,6 +36,7 @@ logging.getLogger("tungstenite").setLevel(logging.WARNING)
 
 load_dotenv()
 client = OpenAI() 
+backend = BackendSDK()
 
 
 @oai_agents.function_tool
@@ -171,7 +172,8 @@ async def execute(instruction: str, context: RunContext):
         "w": 100.0,
         "h": 100.0
     }
-    add_ui_component(component)
+    print(component)
+    backend.add_ui_component(component)
     return {"status": "success"}
 
 if __name__ == "__main__":
